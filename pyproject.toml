@@ -1,0 +1,11 @@
+[project]
+name = "pharmacist-assistant"
+version = "0.1.0"
+description = "pharmacist assistant"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chainlit>=2.9.4",
+    "openai>=2.14.0",
+    "pydantic>=2.12.5",
+]
