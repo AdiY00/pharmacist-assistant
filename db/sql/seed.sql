@@ -113,9 +113,9 @@ INSERT INTO medication_ingredients (medication_id, ingredient_id) VALUES
 
 -- Stock (with interesting scenarios)
 INSERT INTO stock (medication_id, dosage, quantity) VALUES
-    -- Acamol: 500mg OUT OF STOCK, 250mg in stock
+    -- Acamol: COMPLETELY OUT OF STOCK
     (1, '500mg', 0),
-    (1, '250mg', 80),
+    (1, '250mg', 0),
     -- Dexamol: in stock (alternative for Acamol 500mg)
     (2, '500mg', 120),
     (2, '250mg', 60),
