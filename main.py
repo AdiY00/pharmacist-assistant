@@ -60,3 +60,5 @@ async def on_message(message: cl.Message) -> None:
     await msg.update()
 
     messages.append({"role": "assistant", "content": full_response})
+
+    cl.user_session.set("messages", messages)
