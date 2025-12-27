@@ -50,6 +50,12 @@ async def on_message(message: cl.Message) -> None:
             if event.messages:
                 final_messages = event.messages
 
+        elif event.type == "error":
+            if thinking_step is not None:
+                await thinking_step.__aexit__(None, None, None)
+            await cl.ErrorMessage(content=event.content).send()
+            return
+
     # Ensure thinking step is closed if it was still open
     if thinking_step is not None:
         await thinking_step.__aexit__(None, None, None)
