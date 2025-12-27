@@ -10,7 +10,13 @@ from openai.types.responses import (
     ToolParam,
 )
 
-from tools import BaseTool, GetMedicationsByIngredient, GetMedicationStock
+from tools import (
+    BaseTool,
+    GetMedicationsByIngredient,
+    GetMedicationStock,
+    LoadPrescriptions,
+    ReserveMedications,
+)
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5")
 REASONING_EFFORT: Any = os.getenv("REASONING_EFFORT", "low")
@@ -23,6 +29,8 @@ SYSTEM_PROMPT = "You are a helpful pharmacist assistant."
 TOOLS: list[type[BaseTool]] = [
     GetMedicationStock,
     GetMedicationsByIngredient,
+    LoadPrescriptions,
+    ReserveMedications,
 ]
 
 

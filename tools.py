@@ -3,7 +3,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from db import medications, stock
+from db import medications, prescriptions, stock, users
+from db.connection import get_connection
+from db.dosage import is_dosage_equivalent
 
 
 class BaseTool(BaseModel):
@@ -50,7 +52,7 @@ class BaseTool(BaseModel):
 
 
 class GetMedicationStock(BaseTool):
-    """Get stock info for a medication by name. Returns all available dosages and quantities."""
+    """Get stock info for a medication by name. Returns all available dosages and quantities (in monthly packs)."""
 
     medication_name: str = Field(description="The name of the medication to check")
 
@@ -84,7 +86,7 @@ class GetMedicationStock(BaseTool):
 
 
 class GetMedicationsByIngredient(BaseTool):
-    """Get medications containing an ingredient. Returns stock availability for each."""
+    """Get medications containing an ingredient. Returns stock availability (in monthly packs) for each."""
 
     ingredient_name: str = Field(
         description="The name of the active ingredient to search for"
@@ -136,4 +138,244 @@ class GetMedicationsByIngredient(BaseTool):
             "found": True,
             "count": len(results),
             "medications": medication_list,
+        }
+
+
+class LoadPrescriptions(BaseTool):
+    """Load all active prescriptions for a user by their 4-digit PIN."""
+
+    pin: str = Field(description="The user's 4-digit PIN")
+
+    def execute(self) -> dict[str, Any]:
+        user_prescriptions = prescriptions.get_by_user_pin(
+            self.pin, active_only=True, include_medication=True
+        )
+
+        if not user_prescriptions:
+            return {
+                "found": False,
+                "error": "No active prescriptions found for this PIN",
+                "prescriptions": [],
+            }
+
+        # Get user name from the first prescription's user lookup
+        user = user_prescriptions[0].user
+        if not user:
+            # Fetch user separately if not included
+            user = users.get_by_pin(self.pin)
+
+        prescription_list = []
+        for rx in user_prescriptions:
+            rx_info: dict[str, Any] = {
+                "prescription_id": rx.id,
+                "dosage": rx.dosage,
+                "months_supply": rx.months_supply,
+                "months_fulfilled": rx.months_fulfilled,
+                "months_remaining": rx.months_remaining,
+                "expires_at": rx.expires_at.isoformat() if rx.expires_at else None,
+            }
+
+            if rx.medication:
+                rx_info["medication_name"] = rx.medication.name_en
+                rx_info["price"] = rx.medication.price
+
+            prescription_list.append(rx_info)
+
+        return {
+            "found": True,
+            "user_name": user.name if user else None,
+            "count": len(prescription_list),
+            "prescriptions": prescription_list,
+        }
+
+
+class MedicationToReserve(BaseModel):
+    """A single medication to reserve with dosage and quantity (in monthly packs)."""
+
+    medication_name: str = Field(description="The name of the medication to reserve")
+    dosage: str = Field(description="The dosage to reserve (e.g., '500mg', '100mg')")
+    quantity: int = Field(description="Number of monthly packs to reserve", gt=0)
+
+
+class ReserveMedications(BaseTool):
+    """Reserve medications for a user. Validates prescriptions, checks stock, and updates inventory.
+
+    Stock units are monthly packs. Each reservation decrements stock and increments
+    the prescription's months_fulfilled by the quantity reserved.
+
+    All medications must have valid active prescriptions. Dosage flexibility is allowed -
+    e.g., 5x100mg packs can fulfill a 10x50mg prescription (equivalent total milligrams,
+    with up to 25% tolerance for rounding).
+
+    This is an all-or-nothing operation: if any medication fails validation,
+    no reservations are made.
+    """
+
+    user_pin: str = Field(description="The user's 4-digit PIN")
+    medications: list[MedicationToReserve] = Field(
+        description="List of medications to reserve with dosage and quantity"
+    )
+
+    def execute(self) -> dict[str, Any]:
+        # 1. Validate user exists
+        user = users.get_by_pin(self.user_pin)
+        if not user:
+            return {
+                "success": False,
+                "error": f"User with PIN '{self.user_pin}' not found",
+            }
+
+        # 2. Get all active prescriptions for the user
+        user_prescriptions = prescriptions.get_by_user_pin(
+            self.user_pin, active_only=True, include_medication=True
+        )
+
+        # Build a lookup: medication_id -> prescription
+        prescription_by_med_id: dict[int, Any] = {}
+        for rx in user_prescriptions:
+            prescription_by_med_id[rx.medication_id] = rx
+
+        # 3. Validate all medications before making any changes
+        validated_items: list[dict[str, Any]] = []
+        errors: list[str] = []
+
+        for med_request in self.medications:
+            # Find the medication
+            med = medications.get_by_name(med_request.medication_name)
+            if not med:
+                errors.append(
+                    f"Medication '{med_request.medication_name}' not found in catalogue"
+                )
+                continue
+
+            # Check if user has an active prescription for this medication
+            rx = prescription_by_med_id.get(med.id)
+            if not rx:
+                errors.append(
+                    f"No active prescription for '{med_request.medication_name}'"
+                )
+                continue
+
+            # Check dosage equivalence (with 25% tolerance for rounding)
+            # The quantity represents number of monthly packs, not pills per pack.
+            # We compare 1 pack of requested dosage vs 1 pack of prescribed dosage.
+            # E.g., 1x100mg pack can fulfill 1x100mg prescription (exact match)
+            # E.g., 2x50mg packs can fulfill 1x100mg prescription (equivalent: 100mg = 100mg)
+            # The 25% tolerance allows for rounding, e.g., 1x125mg for 1x100mg prescription
+            if rx.dosage:
+                if not is_dosage_equivalent(
+                    prescribed_dosage=rx.dosage,
+                    prescribed_quantity=1,
+                    requested_dosage=med_request.dosage,
+                    requested_quantity=1,  # Compare per-pack, not total quantity
+                    tolerance=0.25,
+                ):
+                    errors.append(
+                        f"Requested dosage {med_request.dosage} of "
+                        f"'{med_request.medication_name}' does not match prescription "
+                        f"dosage {rx.dosage} (must be equivalent with up to 25% tolerance)"
+                    )
+                    continue
+
+            # Check that user isn't reserving more months than remaining
+            if med_request.quantity > rx.months_remaining:
+                errors.append(
+                    f"Cannot reserve {med_request.quantity} month(s) of "
+                    f"'{med_request.medication_name}': only {rx.months_remaining} "
+                    f"month(s) remaining on prescription"
+                )
+                continue
+
+            # Check stock availability
+            stock_items = stock.get_by_medication_id(med.id, med_request.dosage)
+            if not stock_items:
+                errors.append(
+                    f"'{med_request.medication_name}' {med_request.dosage} not in stock"
+                )
+                continue
+
+            stock_item = stock_items[0]
+            if stock_item.quantity < med_request.quantity:
+                errors.append(
+                    f"Insufficient stock for '{med_request.medication_name}' "
+                    f"{med_request.dosage}: requested {med_request.quantity}, "
+                    f"available {stock_item.quantity}"
+                )
+                continue
+
+            # All checks passed for this medication
+            validated_items.append(
+                {
+                    "medication": med,
+                    "prescription": rx,
+                    "stock_item": stock_item,
+                    "quantity": med_request.quantity,
+                    "dosage": med_request.dosage,
+                }
+            )
+
+        # If any errors, fail the entire operation
+        if errors:
+            return {
+                "success": False,
+                "errors": errors,
+            }
+
+        if not validated_items:
+            return {
+                "success": False,
+                "error": "No medications to reserve",
+            }
+
+        # 4. Execute all updates in a transaction
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            reserved_details: list[dict[str, Any]] = []
+
+            for item in validated_items:
+                stock_item = item["stock_item"]
+                rx = item["prescription"]
+                med = item["medication"]
+
+                # Decrement stock
+                cursor.execute(
+                    "UPDATE stock SET quantity = quantity - ?, "
+                    "updated_at = datetime('now') WHERE id = ?",
+                    (item["quantity"], stock_item.id),
+                )
+
+                # Increment prescription months_fulfilled by the quantity reserved
+                cursor.execute(
+                    "UPDATE prescriptions SET months_fulfilled = months_fulfilled + ? "
+                    "WHERE id = ?",
+                    (item["quantity"], rx.id),
+                )
+
+                reserved_details.append(
+                    {
+                        "medication_name": med.name_en,
+                        "dosage": item["dosage"],
+                        "quantity": item["quantity"],
+                        "prescription_id": rx.id,
+                        "months_remaining": rx.months_remaining - item["quantity"],
+                    }
+                )
+
+            conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            return {
+                "success": False,
+                "error": f"Transaction failed: {str(e)}",
+            }
+        finally:
+            conn.close()
+
+        return {
+            "success": True,
+            "user_name": user.name,
+            "reserved": reserved_details,
         }
