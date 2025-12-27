@@ -30,10 +30,10 @@ unsafe_allow_html = false
 latex = false
 
 # Autoscroll new user messages at the top of the window
-user_message_autoscroll = false
+user_message_autoscroll = true
 
 # Autoscroll new assistant messages
-assistant_message_autoscroll = false
+assistant_message_autoscroll = true
 
 # Automatically tag threads with the current chat profile (if a chat profile is used)
 auto_tag_thread = true
@@ -50,7 +50,7 @@ reaction_on_message_received = false
 
 # Authorize users to spontaneously upload files with messages
 [features.spontaneous_file_upload]
-    enabled = false
+    enabled = true
     # Define accepted file types using MIME types
     # Examples:
     # 1. For specific file types:
@@ -89,9 +89,9 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "PharmaBot"
+name = "Assistant"
 
-default_theme = "light"
+# default_theme = "dark"
 
 # Force a specific language for all users (e.g., "en-US", "he-IL", "fr-FR")
 # If not set, the browser's language will be used
@@ -116,7 +116,7 @@ cot = "full"
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
-custom_js = "/public/rtl.js"
+# custom_js = "/public/test.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
 alert_style = "classic"
@@ -138,10 +138,10 @@ alert_style = "classic"
 # custom_meta_image_url = "https://chainlit-cloud.s3.eu-west-3.amazonaws.com/logo/chainlit_banner.png"
 
 # Load assistant logo directly from URL.
-logo_file_url = "/public/logo.png"
+logo_file_url = ""
 
 # Load assistant avatar image directly from URL.
-default_avatar_file_url = "/public/avatars/PharmaBot.png"
+default_avatar_file_url = ""
 
 # Specify a custom build directory for the frontend.
 # This can be used to customize the frontend code.
