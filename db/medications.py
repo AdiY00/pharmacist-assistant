@@ -121,3 +121,37 @@ def get_all(include_ingredients: bool = False) -> list[Medication]:
         for med in medications:
             med.ingredients = _get_ingredients_for_medication(med.id)
     return medications
+
+
+def get_dosage_instructions(
+    medication_id: int,
+    dosage: str | None = None,
+) -> list[dict]:
+    """
+    Get dosage instructions for a medication.
+
+    If dosage is provided, returns instructions for that specific dosage.
+    Otherwise, returns instructions for all available dosages.
+    """
+    if dosage:
+        rows = query_all(
+            """
+            SELECT dosage, adult_dose, child_dose, frequency, max_daily,
+                   instructions, warnings
+            FROM dosage_instructions
+            WHERE medication_id = ? AND LOWER(dosage) = LOWER(?)
+            """,
+            (medication_id, dosage),
+        )
+    else:
+        rows = query_all(
+            """
+            SELECT dosage, adult_dose, child_dose, frequency, max_daily,
+                   instructions, warnings
+            FROM dosage_instructions
+            WHERE medication_id = ?
+            ORDER BY dosage
+            """,
+            (medication_id,),
+        )
+    return [dict(row) for row in rows]

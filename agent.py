@@ -1,6 +1,7 @@
 import os
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Literal, cast
 
 from openai import AsyncOpenAI
@@ -12,6 +13,7 @@ from openai.types.responses import (
 
 from tools import (
     BaseTool,
+    GetDosageInstructions,
     GetMedicationsByIngredient,
     GetMedicationStock,
     LoadPrescriptions,
@@ -23,12 +25,13 @@ REASONING_EFFORT: Any = os.getenv("REASONING_EFFORT", "low")
 
 client = AsyncOpenAI()
 
-SYSTEM_PROMPT = "You are a helpful pharmacist assistant."
+SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md").read_text()
 
 # Register all tools here
 TOOLS: list[type[BaseTool]] = [
     GetMedicationStock,
     GetMedicationsByIngredient,
+    GetDosageInstructions,
     LoadPrescriptions,
     ReserveMedications,
 ]

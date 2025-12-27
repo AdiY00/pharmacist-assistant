@@ -61,6 +61,21 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
 );
 
+-- Dosage instructions / usage information
+CREATE TABLE IF NOT EXISTS dosage_instructions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    medication_id INTEGER NOT NULL,
+    dosage TEXT NOT NULL,
+    adult_dose TEXT,
+    child_dose TEXT,
+    frequency TEXT,
+    max_daily TEXT,
+    instructions TEXT,
+    warnings TEXT,
+    UNIQUE (medication_id, dosage),
+    FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE
+);
+
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_medications_name_en ON medications(name_en);
 CREATE INDEX IF NOT EXISTS idx_medications_name_he ON medications(name_he);
@@ -68,3 +83,4 @@ CREATE INDEX IF NOT EXISTS idx_ingredients_name_en ON ingredients(name_en);
 CREATE INDEX IF NOT EXISTS idx_stock_medication_id ON stock(medication_id);
 CREATE INDEX IF NOT EXISTS idx_prescriptions_user_id ON prescriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_prescriptions_medication_id ON prescriptions(medication_id);
+CREATE INDEX IF NOT EXISTS idx_dosage_instructions_medication_id ON dosage_instructions(medication_id);

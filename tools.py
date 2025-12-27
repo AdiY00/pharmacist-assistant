@@ -85,6 +85,50 @@ class GetMedicationStock(BaseTool):
         }
 
 
+class GetDosageInstructions(BaseTool):
+    """Get dosage and usage instructions for a medication. Returns adult/child doses, frequency, max daily dose, and warnings."""
+
+    medication_name: str = Field(description="The name of the medication")
+    dosage: str | None = Field(
+        default=None,
+        description="Optional specific dosage (e.g., '500mg'). If not provided, returns instructions for all available dosages.",
+    )
+
+    def execute(self) -> dict[str, Any]:
+        med = medications.get_by_name(self.medication_name)
+        if not med:
+            return {
+                "medication_name": self.medication_name,
+                "found": False,
+                "error": f"Medication '{self.medication_name}' not found in catalogue",
+            }
+
+        instructions = medications.get_dosage_instructions(med.id, self.dosage)
+
+        if not instructions:
+            if self.dosage:
+                return {
+                    "medication_name": med.name_en,
+                    "found": True,
+                    "dosage": self.dosage,
+                    "instructions_found": False,
+                    "error": f"No dosage instructions found for {self.dosage}",
+                }
+            return {
+                "medication_name": med.name_en,
+                "found": True,
+                "instructions_found": False,
+                "error": "No dosage instructions available for this medication",
+            }
+
+        return {
+            "medication_name": med.name_en,
+            "found": True,
+            "instructions_found": True,
+            "dosage_instructions": instructions,
+        }
+
+
 class GetMedicationsByIngredient(BaseTool):
     """Get medications containing an ingredient. Returns stock availability (in monthly packs) for each."""
 
@@ -249,20 +293,22 @@ class ReserveMedications(BaseTool):
                 continue
 
             # Check if user has an active prescription for this medication
+            # Only required if medication requires a prescription
             rx = prescription_by_med_id.get(med.id)
-            if not rx:
+            if not rx and med.requires_prescription:
                 errors.append(
                     f"No active prescription for '{med_request.medication_name}'"
                 )
                 continue
 
             # Check dosage equivalence (with 25% tolerance for rounding)
+            # Only applies if medication requires prescription and has dosage specified
             # The quantity represents number of monthly packs, not pills per pack.
             # We compare 1 pack of requested dosage vs 1 pack of prescribed dosage.
             # E.g., 1x100mg pack can fulfill 1x100mg prescription (exact match)
             # E.g., 2x50mg packs can fulfill 1x100mg prescription (equivalent: 100mg = 100mg)
             # The 25% tolerance allows for rounding, e.g., 1x125mg for 1x100mg prescription
-            if rx.dosage:
+            if rx and rx.dosage:
                 if not is_dosage_equivalent(
                     prescribed_dosage=rx.dosage,
                     prescribed_quantity=1,
@@ -278,7 +324,8 @@ class ReserveMedications(BaseTool):
                     continue
 
             # Check that user isn't reserving more months than remaining
-            if med_request.quantity > rx.months_remaining:
+            # Only applies if medication requires prescription
+            if rx and med_request.quantity > rx.months_remaining:
                 errors.append(
                     f"Cannot reserve {med_request.quantity} month(s) of "
                     f"'{med_request.medication_name}': only {rx.months_remaining} "
@@ -347,21 +394,36 @@ class ReserveMedications(BaseTool):
                 )
 
                 # Increment prescription months_fulfilled by the quantity reserved
-                cursor.execute(
-                    "UPDATE prescriptions SET months_fulfilled = months_fulfilled + ? "
-                    "WHERE id = ?",
-                    (item["quantity"], rx.id),
+                # Only for prescription medications
+                if rx:
+                    cursor.execute(
+                        "UPDATE prescriptions SET months_fulfilled = months_fulfilled + ? "
+                        "WHERE id = ?",
+                        (item["quantity"], rx.id),
+                    )
+
+                # Get dosage instructions for the reserved dosage
+                dosage_instructions = medications.get_dosage_instructions(
+                    med.id, item["dosage"]
                 )
 
-                reserved_details.append(
-                    {
-                        "medication_name": med.name_en,
-                        "dosage": item["dosage"],
-                        "quantity": item["quantity"],
-                        "prescription_id": rx.id,
-                        "months_remaining": rx.months_remaining - item["quantity"],
-                    }
-                )
+                reserved_item: dict[str, Any] = {
+                    "medication_name": med.name_en,
+                    "dosage": item["dosage"],
+                    "quantity": item["quantity"],
+                }
+
+                # Include prescription info only if applicable
+                if rx:
+                    reserved_item["prescription_id"] = rx.id
+                    reserved_item["months_remaining"] = (
+                        rx.months_remaining - item["quantity"]
+                    )
+
+                if dosage_instructions:
+                    reserved_item["usage"] = dosage_instructions[0]
+
+                reserved_details.append(reserved_item)
 
             conn.commit()
 

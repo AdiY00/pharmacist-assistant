@@ -217,3 +217,93 @@ INSERT INTO prescriptions (user_id, medication_id, dosage, months_supply, months
     (5, 15, '10mg', 3, 3, '2026-06-01'),
     -- Yossi: Claritine (OUT OF STOCK, NO ALTERNATIVES) - double problem
     (5, 21, '10mg', 2, 0, '2026-04-15');
+
+-- Dosage instructions
+INSERT INTO dosage_instructions (medication_id, dosage, adult_dose, child_dose, frequency, max_daily, instructions, warnings) VALUES
+    -- Acamol (Acetaminophen) 500mg
+    (1, '500mg', '1-2 tablets', '6-12 years: 1/2-1 tablet; Under 6: consult doctor', 'Every 4-6 hours as needed', '8 tablets (4000mg)', 'Take with or without food. Swallow whole with water.', 'Do not exceed recommended dose. Avoid alcohol. Consult doctor if symptoms persist more than 3 days.'),
+    -- Acamol 250mg
+    (1, '250mg', '2-4 tablets', '6-12 years: 1-2 tablets; 2-6 years: 1 tablet; Under 2: consult doctor', 'Every 4-6 hours as needed', '16 tablets (4000mg)', 'Take with or without food. Can be crushed for children.', 'Do not exceed recommended dose. Avoid alcohol. Consult doctor if symptoms persist more than 3 days.'),
+    -- Dexamol (Acetaminophen) 500mg
+    (2, '500mg', '1-2 tablets', '6-12 years: 1/2-1 tablet; Under 6: consult doctor', 'Every 4-6 hours as needed', '8 tablets (4000mg)', 'Take with or without food. Swallow whole with water.', 'Do not exceed recommended dose. Avoid alcohol. Consult doctor if symptoms persist more than 3 days.'),
+    -- Dexamol 250mg
+    (2, '250mg', '2-4 tablets', '6-12 years: 1-2 tablets; 2-6 years: 1 tablet; Under 2: consult doctor', 'Every 4-6 hours as needed', '16 tablets (4000mg)', 'Take with or without food. Can be crushed for children.', 'Do not exceed recommended dose. Avoid alcohol. Consult doctor if symptoms persist more than 3 days.'),
+    -- Paracetamol Teva 500mg
+    (3, '500mg', '1-2 tablets', '6-12 years: 1/2-1 tablet; Under 6: consult doctor', 'Every 4-6 hours as needed', '8 tablets (4000mg)', 'Take with or without food. Swallow whole with water.', 'Do not exceed recommended dose. Avoid alcohol. Consult doctor if symptoms persist more than 3 days.'),
+
+    -- Advil (Ibuprofen) 200mg
+    (4, '200mg', '1-2 tablets', '6-12 years: 1 tablet; Under 6: not recommended', 'Every 4-6 hours as needed', '6 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+    -- Advil 400mg
+    (4, '400mg', '1 tablet', 'Not recommended for children under 12', 'Every 4-6 hours as needed', '3 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+    -- Nurofen (Ibuprofen) 200mg
+    (5, '200mg', '1-2 tablets', '6-12 years: 1 tablet; Under 6: not recommended', 'Every 4-6 hours as needed', '6 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+    -- Nurofen 400mg
+    (5, '400mg', '1 tablet', 'Not recommended for children under 12', 'Every 4-6 hours as needed', '3 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+    -- Ibuprofen Teva 200mg
+    (6, '200mg', '1-2 tablets', '6-12 years: 1 tablet; Under 6: not recommended', 'Every 4-6 hours as needed', '6 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+    -- Ibuprofen Teva 400mg
+    (6, '400mg', '1 tablet', 'Not recommended for children under 12', 'Every 4-6 hours as needed', '3 tablets (1200mg)', 'Take with food or milk to reduce stomach upset.', 'Do not use if allergic to aspirin. Avoid if pregnant. Not for use more than 10 days unless directed by doctor.'),
+
+    -- Moxypen (Amoxicillin) 500mg
+    (7, '500mg', '1 capsule', '25-50mg/kg/day divided into doses; consult doctor', 'Every 8 hours', '3 capsules (1500mg) unless directed otherwise', 'Complete the full course even if feeling better. Take with or without food.', 'Inform doctor of penicillin allergy. May cause diarrhea. Take full course as prescribed.'),
+    -- Moxypen 250mg
+    (7, '250mg', '1-2 capsules', '20-40mg/kg/day divided into doses; consult doctor', 'Every 8 hours', '6 capsules (1500mg) unless directed otherwise', 'Complete the full course even if feeling better. Can be taken with or without food.', 'Inform doctor of penicillin allergy. May cause diarrhea. Take full course as prescribed.'),
+    -- Amoxicillin Teva 500mg
+    (8, '500mg', '1 capsule', '25-50mg/kg/day divided into doses; consult doctor', 'Every 8 hours', '3 capsules (1500mg) unless directed otherwise', 'Complete the full course even if feeling better. Take with or without food.', 'Inform doctor of penicillin allergy. May cause diarrhea. Take full course as prescribed.'),
+    -- Amoxicillin Teva 250mg
+    (8, '250mg', '1-2 capsules', '20-40mg/kg/day divided into doses; consult doctor', 'Every 8 hours', '6 capsules (1500mg) unless directed otherwise', 'Complete the full course even if feeling better. Can be taken with or without food.', 'Inform doctor of penicillin allergy. May cause diarrhea. Take full course as prescribed.'),
+
+    -- Losec (Omeprazole) 20mg
+    (9, '20mg', '1 capsule', 'Not typically prescribed for children; consult doctor', 'Once daily, 30 minutes before breakfast', '1 capsule (20mg) unless directed otherwise', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+    -- Losec 40mg
+    (9, '40mg', '1 capsule', 'Not typically prescribed for children', 'Once daily, 30 minutes before breakfast', '1 capsule (40mg)', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+    -- Omepradex 20mg
+    (10, '20mg', '1 capsule', 'Not typically prescribed for children; consult doctor', 'Once daily, 30 minutes before breakfast', '1 capsule (20mg) unless directed otherwise', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+    -- Omepradex 40mg
+    (10, '40mg', '1 capsule', 'Not typically prescribed for children', 'Once daily, 30 minutes before breakfast', '1 capsule (40mg)', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+    -- Omeprazole Teva 20mg
+    (11, '20mg', '1 capsule', 'Not typically prescribed for children; consult doctor', 'Once daily, 30 minutes before breakfast', '1 capsule (20mg) unless directed otherwise', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+    -- Omeprazole Teva 40mg
+    (11, '40mg', '1 capsule', 'Not typically prescribed for children', 'Once daily, 30 minutes before breakfast', '1 capsule (40mg)', 'Swallow whole, do not crush or chew. Take before eating.', 'Long-term use may affect calcium absorption. Consult doctor if symptoms persist after 14 days.'),
+
+    -- Glucophage (Metformin) 500mg
+    (12, '500mg', '1 tablet', 'Not for children under 10; 10+: as directed by doctor', '1-3 times daily with meals', 'As prescribed, typically up to 2000mg/day', 'Take with meals to reduce stomach upset. Do not crush extended-release tablets.', 'May cause lactic acidosis in rare cases. Avoid excessive alcohol. Stop before contrast dye procedures.'),
+    -- Glucophage 850mg
+    (12, '850mg', '1 tablet', 'Not for children under 10; 10+: as directed by doctor', '1-2 times daily with meals', 'As prescribed, typically up to 2550mg/day', 'Take with meals to reduce stomach upset.', 'May cause lactic acidosis in rare cases. Avoid excessive alcohol. Stop before contrast dye procedures.'),
+    -- Metformin Teva 500mg
+    (13, '500mg', '1 tablet', 'Not for children under 10; 10+: as directed by doctor', '1-3 times daily with meals', 'As prescribed, typically up to 2000mg/day', 'Take with meals to reduce stomach upset. Do not crush extended-release tablets.', 'May cause lactic acidosis in rare cases. Avoid excessive alcohol. Stop before contrast dye procedures.'),
+    -- Metformin Teva 850mg
+    (13, '850mg', '1 tablet', 'Not for children under 10; 10+: as directed by doctor', '1-2 times daily with meals', 'As prescribed, typically up to 2550mg/day', 'Take with meals to reduce stomach upset.', 'May cause lactic acidosis in rare cases. Avoid excessive alcohol. Stop before contrast dye procedures.'),
+
+    -- Zestril (Lisinopril) 10mg
+    (14, '10mg', '1 tablet', 'Not recommended for children', 'Once daily', '1 tablet (10mg) unless directed otherwise', 'Take at the same time each day. Can be taken with or without food.', 'May cause dizziness. Rise slowly from sitting. Do not use if pregnant. Monitor potassium levels.'),
+    -- Zestril 20mg
+    (14, '20mg', '1 tablet', 'Not recommended for children', 'Once daily', '1 tablet (20mg) unless directed otherwise', 'Take at the same time each day. Can be taken with or without food.', 'May cause dizziness. Rise slowly from sitting. Do not use if pregnant. Monitor potassium levels.'),
+
+    -- Lipitor (Atorvastatin) 10mg
+    (15, '10mg', '1 tablet', 'Not recommended for children under 10', 'Once daily, preferably in the evening', '1 tablet (10mg)', 'Can be taken with or without food. Take at the same time each day.', 'Avoid grapefruit. Report unexplained muscle pain. Regular liver function tests recommended.'),
+    -- Lipitor 20mg
+    (15, '20mg', '1 tablet', 'Not recommended for children under 10', 'Once daily, preferably in the evening', '1 tablet (20mg)', 'Can be taken with or without food. Take at the same time each day.', 'Avoid grapefruit. Report unexplained muscle pain. Regular liver function tests recommended.'),
+    -- Atorvastatin Teva 10mg
+    (16, '10mg', '1 tablet', 'Not recommended for children under 10', 'Once daily, preferably in the evening', '1 tablet (10mg)', 'Can be taken with or without food. Take at the same time each day.', 'Avoid grapefruit. Report unexplained muscle pain. Regular liver function tests recommended.'),
+    -- Atorvastatin Teva 20mg
+    (16, '20mg', '1 tablet', 'Not recommended for children under 10', 'Once daily, preferably in the evening', '1 tablet (20mg)', 'Can be taken with or without food. Take at the same time each day.', 'Avoid grapefruit. Report unexplained muscle pain. Regular liver function tests recommended.'),
+
+    -- Benadryl (Diphenhydramine) 25mg
+    (17, '25mg', '1-2 tablets', '6-12 years: 1/2-1 tablet; 2-6 years: consult doctor', 'Every 4-6 hours as needed', '6 tablets (150mg)', 'May cause drowsiness. Take before bedtime if using for sleep.', 'Do not drive or operate machinery. Avoid alcohol. May cause dry mouth.'),
+
+    -- Sudafed (Pseudoephedrine) 60mg
+    (18, '60mg', '1 tablet', '6-12 years: 1/2 tablet; Under 6: not recommended', 'Every 4-6 hours as needed', '4 tablets (240mg)', 'Take with a full glass of water. Avoid taking near bedtime.', 'May cause insomnia, nervousness. Do not use with MAO inhibitors. Caution with high blood pressure.'),
+
+    -- Zyrtec (Cetirizine) 10mg
+    (19, '10mg', '1 tablet', '6-12 years: 1/2-1 tablet; 2-6 years: 1/2 tablet', 'Once daily', '1 tablet (10mg)', 'Can be taken with or without food. Take at the same time each day.', 'May cause mild drowsiness in some people. Avoid alcohol.'),
+    -- Histazine (Cetirizine) 10mg
+    (20, '10mg', '1 tablet', '6-12 years: 1/2-1 tablet; 2-6 years: 1/2 tablet', 'Once daily', '1 tablet (10mg)', 'Can be taken with or without food. Take at the same time each day.', 'May cause mild drowsiness in some people. Avoid alcohol.'),
+
+    -- Claritine (Loratadine) 10mg
+    (21, '10mg', '1 tablet', '6-12 years: 1/2-1 tablet; 2-6 years: consult doctor', 'Once daily', '1 tablet (10mg)', 'Take on an empty stomach for faster effect. Can be taken with food if stomach upset occurs.', 'Generally non-drowsy. Safe for most adults. Consult doctor if pregnant.'),
+
+    -- Norvasc (Amlodipine) 5mg
+    (22, '5mg', '1 tablet', 'Not recommended for children', 'Once daily', '1 tablet (5mg) unless directed otherwise', 'Take at the same time each day. Can be taken with or without food.', 'May cause swelling in ankles. Rise slowly to avoid dizziness. Do not stop suddenly.'),
+    -- Norvasc 10mg
+    (22, '10mg', '1 tablet', 'Not recommended for children', 'Once daily', '1 tablet (10mg)', 'Take at the same time each day. Can be taken with or without food.', 'May cause swelling in ankles. Rise slowly to avoid dizziness. Do not stop suddenly.');
