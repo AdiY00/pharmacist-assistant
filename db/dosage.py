@@ -97,3 +97,46 @@ def calculate_equivalent_quantity(
 
     # Calculate how many stock units needed (round up)
     return math.ceil(total_prescribed / stock_mg)
+
+
+def calculate_equivalent_months(
+    requested_dosage: str,
+    requested_quantity: int,
+    prescribed_dosage: str,
+    tolerance: float = 0.25,
+) -> int | None:
+    """
+    Calculate how many months of a prescription are consumed by a request.
+
+    Returns the ceiling (rounded up) of equivalent months, but only if
+    the rounding doesn't exceed the tolerance (default 25%).
+
+    Example (with 25% tolerance):
+    - 16 packs of 10mg with prescription of 20mg/month = 8.0 -> 8 months
+    - 8 packs of 20mg with prescription of 20mg/month = 8.0 -> 8 months
+    - 4 packs of 40mg with prescription of 20mg/month = 8.0 -> 8 months
+    - 15 packs of 10mg with prescription of 20mg/month = 7.5 -> 8 months (within 125%)
+    - 13 packs of 10mg with prescription of 20mg/month = 6.5 -> None (8 months would be >125%)
+
+    Returns None if:
+    - Dosages cannot be parsed
+    - Rounding up would exceed the tolerance threshold
+    """
+    import math
+
+    requested_mg = parse_mg(requested_dosage)
+    prescribed_mg = parse_mg(prescribed_dosage)
+
+    if requested_mg is None or prescribed_mg is None:
+        return None
+
+    total_requested_mg = requested_mg * requested_quantity
+    exact_months = total_requested_mg / prescribed_mg
+    rounded_months = math.ceil(exact_months)
+
+    # Check if rounding up exceeds tolerance
+    # e.g., if exact is 6.5 and rounded is 8, that's 8/6.5 = 1.23 (23% over)
+    if exact_months > 0 and rounded_months / exact_months > (1 + tolerance):
+        return None
+
+    return rounded_months

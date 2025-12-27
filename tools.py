@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from db import medications, prescriptions, stock, users
 from db.connection import get_connection
-from db.dosage import is_dosage_equivalent
+from db.dosage import calculate_equivalent_months
 
 
 class BaseTool(BaseModel):
@@ -301,37 +301,33 @@ class ReserveMedications(BaseTool):
                 )
                 continue
 
-            # Check dosage equivalence (with 25% tolerance for rounding)
-            # Only applies if medication requires prescription and has dosage specified
-            # The quantity represents number of monthly packs, not pills per pack.
-            # We compare 1 pack of requested dosage vs 1 pack of prescribed dosage.
-            # E.g., 1x100mg pack can fulfill 1x100mg prescription (exact match)
-            # E.g., 2x50mg packs can fulfill 1x100mg prescription (equivalent: 100mg = 100mg)
-            # The 25% tolerance allows for rounding, e.g., 1x125mg for 1x100mg prescription
+            # Check dosage equivalence and calculate effective months consumed
+            # E.g., 16 packs of 10mg fulfills 8 months of a 20mg prescription
+            effective_months: int | None = None
             if rx and rx.dosage:
-                if not is_dosage_equivalent(
-                    prescribed_dosage=rx.dosage,
-                    prescribed_quantity=1,
+                effective_months = calculate_equivalent_months(
                     requested_dosage=med_request.dosage,
-                    requested_quantity=1,  # Compare per-pack, not total quantity
+                    requested_quantity=med_request.quantity,
+                    prescribed_dosage=rx.dosage,
                     tolerance=0.25,
-                ):
+                )
+
+                if effective_months is None:
                     errors.append(
                         f"Requested dosage {med_request.dosage} of "
-                        f"'{med_request.medication_name}' does not match prescription "
-                        f"dosage {rx.dosage} (must be equivalent with up to 25% tolerance)"
+                        f"'{med_request.medication_name}' cannot be converted to "
+                        f"prescription dosage {rx.dosage} (rounding exceeds 25% tolerance)"
                     )
                     continue
 
-            # Check that user isn't reserving more months than remaining
-            # Only applies if medication requires prescription
-            if rx and med_request.quantity > rx.months_remaining:
-                errors.append(
-                    f"Cannot reserve {med_request.quantity} month(s) of "
-                    f"'{med_request.medication_name}': only {rx.months_remaining} "
-                    f"month(s) remaining on prescription"
-                )
-                continue
+                # Check that effective months don't exceed remaining prescription
+                if effective_months > rx.months_remaining:
+                    errors.append(
+                        f"Cannot reserve {med_request.quantity}x{med_request.dosage} of "
+                        f"'{med_request.medication_name}': equivalent to {effective_months} "
+                        f"month(s), but only {rx.months_remaining} month(s) remaining on prescription"
+                    )
+                    continue
 
             # Check stock availability
             stock_items = stock.get_by_medication_id(med.id, med_request.dosage)
@@ -358,6 +354,7 @@ class ReserveMedications(BaseTool):
                     "stock_item": stock_item,
                     "quantity": med_request.quantity,
                     "dosage": med_request.dosage,
+                    "effective_months": effective_months,
                 }
             )
 
@@ -393,13 +390,13 @@ class ReserveMedications(BaseTool):
                     (item["quantity"], stock_item.id),
                 )
 
-                # Increment prescription months_fulfilled by the quantity reserved
+                # Increment prescription months_fulfilled by effective months consumed
                 # Only for prescription medications
                 if rx:
                     cursor.execute(
                         "UPDATE prescriptions SET months_fulfilled = months_fulfilled + ? "
                         "WHERE id = ?",
-                        (item["quantity"], rx.id),
+                        (item["effective_months"], rx.id),
                     )
 
                 # Get dosage instructions for the reserved dosage
@@ -417,7 +414,7 @@ class ReserveMedications(BaseTool):
                 if rx:
                     reserved_item["prescription_id"] = rx.id
                     reserved_item["months_remaining"] = (
-                        rx.months_remaining - item["quantity"]
+                        rx.months_remaining - item["effective_months"]
                     )
 
                 if dosage_instructions:
