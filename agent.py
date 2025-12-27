@@ -6,7 +6,6 @@ from typing import Any, Literal, cast
 
 from openai import AsyncOpenAI
 from openai.types.responses import (
-    EasyInputMessageParam,
     ResponseInputItemParam,
     ToolParam,
 )
@@ -36,6 +35,9 @@ TOOLS: list[type[BaseTool]] = [
     ReserveMedications,
 ]
 
+# Type alias for conversation messages in Responses API format
+InputMessage = ResponseInputItemParam
+
 
 def _get_tools_schema() -> list[ToolParam]:
     """Get OpenAI schema for all registered tools."""
@@ -54,40 +56,27 @@ def _execute_tool(name: str, arguments: str) -> str:
 class StreamEvent:
     """Event emitted during streaming."""
 
-    type: Literal["reasoning", "reasoning_end", "text", "tool_call"]
+    type: Literal["reasoning", "reasoning_end", "text", "tool_call", "done"]
     content: str
     tool_name: str | None = None
     tool_result: str | None = None
+    # Final messages returned with "done" event
+    messages: list[InputMessage] | None = None
 
 
-def _convert_messages(
-    messages: list[dict[str, str]],
-) -> list[ResponseInputItemParam | EasyInputMessageParam]:
-    """Convert chat format messages to Responses API format."""
-    result: list[ResponseInputItemParam | EasyInputMessageParam] = []
-    for msg in messages:
-        role = msg["role"]
-        content = msg["content"]
-
-        if role == "user":
-            result.append({"role": "user", "content": content})
-        elif role == "assistant":
-            result.append({"role": "assistant", "content": content})
-
-    return result
-
-
-async def chat(messages: list[dict[str, str]]) -> AsyncIterator[StreamEvent]:
+async def chat(messages: list[InputMessage]) -> AsyncIterator[StreamEvent]:
     """
     Stream a chat completion response from OpenAI using the Responses API.
 
     Args:
-        messages: Conversation history (user and assistant messages).
+        messages: Conversation history in Responses API format.
 
     Yields:
-        StreamEvent objects containing either reasoning or text content.
+        StreamEvent objects containing reasoning, text, or tool_call content.
+        The final event has type="done" and includes the updated messages list.
     """
-    input_messages: list[Any] = _convert_messages(messages)
+    # Copy to avoid mutating the original
+    input_messages: list[Any] = list(messages)
 
     while True:
         stream = await client.responses.create(
@@ -167,3 +156,6 @@ async def chat(messages: list[dict[str, str]]) -> AsyncIterator[StreamEvent]:
                     "output": result,
                 }
             )
+
+    # Yield final event with updated messages
+    yield StreamEvent(type="done", content="", messages=input_messages)

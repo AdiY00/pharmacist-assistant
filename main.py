@@ -1,6 +1,6 @@
 import chainlit as cl
 
-from agent import StreamEvent, chat
+from agent import InputMessage, StreamEvent, chat
 
 
 @cl.on_chat_start
@@ -12,12 +12,13 @@ async def on_chat_start() -> None:
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
     """Handle incoming user messages."""
-    messages: list[dict[str, str]] = cl.user_session.get("messages") or []
+    messages: list[InputMessage] = cl.user_session.get("messages") or []
 
     messages.append({"role": "user", "content": message.content})
 
     text_events: list[StreamEvent] = []
     thinking_step: cl.Step | None = None
+    final_messages: list[InputMessage] = messages
 
     async for event in chat(messages):
         if event.type == "reasoning":
@@ -44,6 +45,11 @@ async def on_message(message: cl.Message) -> None:
         elif event.type == "text":
             text_events.append(event)
 
+        elif event.type == "done":
+            # Capture the final messages including tool calls
+            if event.messages:
+                final_messages = event.messages
+
     # Ensure thinking step is closed if it was still open
     if thinking_step is not None:
         await thinking_step.__aexit__(None, None, None)
@@ -59,6 +65,7 @@ async def on_message(message: cl.Message) -> None:
 
     await msg.update()
 
-    messages.append({"role": "assistant", "content": full_response})
+    # Add the assistant's text response to messages
+    final_messages.append({"role": "assistant", "content": full_response})
 
-    cl.user_session.set("messages", messages)
+    cl.user_session.set("messages", final_messages)
