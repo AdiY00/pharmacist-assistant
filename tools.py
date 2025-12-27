@@ -59,8 +59,8 @@ class CheckStock(BaseTool):
     )
 
     def execute(self) -> dict[str, Any]:
-        # Look up medication by name
-        med = medications.get_by_name(self.medication_name)
+        # Look up medication by name (with ingredients for alternative suggestions)
+        med = medications.get_by_name(self.medication_name, include_ingredients=True)
         if not med:
             return {
                 "medication_name": self.medication_name,
@@ -77,6 +77,10 @@ class CheckStock(BaseTool):
             "found": True,
             "in_stock": availability.available_quantity > 0,
             "total_quantity": availability.available_quantity,
+            "active_ingredients": [
+                {"name_en": ing.name_en, "name_he": ing.name_he}
+                for ing in med.ingredients
+            ],
         }
 
         if self.dosage:
@@ -97,3 +101,38 @@ class CheckStock(BaseTool):
             ]
 
         return result
+
+
+class SearchByIngredient(BaseTool):
+    """Search for medications by their active ingredient."""
+
+    ingredient_name: str = Field(
+        description="The name of the active ingredient to search for"
+    )
+
+    def execute(self) -> dict[str, Any]:
+        results = medications.get_by_ingredient(self.ingredient_name)
+
+        if not results:
+            return {
+                "ingredient_name": self.ingredient_name,
+                "found": False,
+                "count": 0,
+                "medications": [],
+            }
+
+        return {
+            "ingredient_name": self.ingredient_name,
+            "found": True,
+            "count": len(results),
+            "medications": [
+                {
+                    "name_en": med.name_en,
+                    "name_he": med.name_he,
+                    "description_en": med.description_en,
+                    "description_he": med.description_he,
+                    "requires_prescription": med.requires_prescription,
+                }
+                for med in results
+            ],
+        }

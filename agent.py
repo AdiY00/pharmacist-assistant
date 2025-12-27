@@ -10,7 +10,7 @@ from openai.types.responses import (
     ToolParam,
 )
 
-from tools import CheckStock, BaseTool
+from tools import BaseTool, CheckStock, SearchByIngredient
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5")
 REASONING_EFFORT: Any = os.getenv("REASONING_EFFORT", "low")
@@ -22,6 +22,7 @@ SYSTEM_PROMPT = "You are a helpful pharmacist assistant."
 # Register all tools here
 TOOLS: list[type[BaseTool]] = [
     CheckStock,
+    SearchByIngredient,
 ]
 
 
