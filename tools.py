@@ -77,6 +77,7 @@ class GetMedicationStock(BaseTool):
             "found": True,
             "description": med.description_en,
             "requires_prescription": med.requires_prescription,
+            "price": med.price,
             "in_stock": len(in_stock_items) > 0,
             "active_ingredients": [ing.name_en for ing in med.ingredients],
             "available_stock": [
@@ -166,6 +167,7 @@ class GetMedicationsByIngredient(BaseTool):
                 "name": med.name_en,
                 "description": med.description_en,
                 "requires_prescription": med.requires_prescription,
+                "price": med.price,
                 "in_stock": len(in_stock_items) > 0,
                 "available_stock": [
                     {"dosage": s.dosage, "quantity": s.quantity} for s in in_stock_items
@@ -377,6 +379,7 @@ class ReserveMedications(BaseTool):
             cursor = conn.cursor()
 
             reserved_details: list[dict[str, Any]] = []
+            total_reservation_price = 0.0
 
             for item in validated_items:
                 stock_item = item["stock_item"]
@@ -404,10 +407,15 @@ class ReserveMedications(BaseTool):
                     med.id, item["dosage"]
                 )
 
+                item_total_price = (med.price or 0.0) * item["quantity"]
+                total_reservation_price += item_total_price
+
                 reserved_item: dict[str, Any] = {
                     "medication_name": med.name_en,
                     "dosage": item["dosage"],
                     "quantity": item["quantity"],
+                    "unit_price": med.price,
+                    "total_price": item_total_price,
                 }
 
                 # Include prescription info only if applicable
@@ -437,4 +445,5 @@ class ReserveMedications(BaseTool):
             "success": True,
             "user_name": user.name,
             "reserved": reserved_details,
+            "total_reservation_price": total_reservation_price,
         }
