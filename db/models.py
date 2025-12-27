@@ -42,6 +42,26 @@ class Stock(BaseModel):
     medication: Medication | None = None
 
 
+class StockAvailability(BaseModel):
+    """Result of checking stock availability."""
+
+    medication_id: int
+    requested_dosage: str | None = None
+    exact_match: Stock | None = None
+    available_quantity: int = 0
+    alternatives: list[Stock] = Field(default_factory=list)
+
+    @property
+    def has_exact_match(self) -> bool:
+        """Check if exact dosage match was found with stock."""
+        return self.exact_match is not None and self.available_quantity > 0
+
+    @property
+    def has_alternatives(self) -> bool:
+        """Check if alternative dosages are available."""
+        return len(self.alternatives) > 0
+
+
 class User(BaseModel):
     """Customer/user model."""
 

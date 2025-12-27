@@ -2,7 +2,14 @@
 
 from db import medications, prescriptions, stock, users
 from db.connection import get_connection, get_db, init_db
-from db.models import Ingredient, Medication, Prescription, Stock, User
+from db.models import (
+    Ingredient,
+    Medication,
+    Prescription,
+    Stock,
+    StockAvailability,
+    User,
+)
 
 __all__ = [
     # Connection utilities
@@ -14,6 +21,7 @@ __all__ = [
     "Medication",
     "Prescription",
     "Stock",
+    "StockAvailability",
     "User",
     # Repositories
     "medications",

@@ -2,7 +2,7 @@
 
 from db import medications
 from db.connection import execute, query_all, query_one
-from db.models import Stock
+from db.models import Stock, StockAvailability
 
 
 def _row_to_stock(row: dict, include_medication: bool = False) -> Stock:
@@ -58,19 +58,43 @@ def get_by_medication_name(
     return get_by_medication_id(med.id, dosage, include_medication)
 
 
-def check_availability(medication_id: int, dosage: str | None = None) -> int:
-    """Check total available quantity for a medication/dosage."""
+def check_availability(
+    medication_id: int,
+    dosage: str | None = None,
+) -> StockAvailability:
+    """
+    Check stock availability for a medication/dosage.
+
+    Returns a StockAvailability with:
+    - exact_match: The stock entry if exact dosage found
+    - available_quantity: Quantity for the exact match
+    - alternatives: Other dosages available if no exact match or no dosage specified
+    """
+    result = StockAvailability(
+        medication_id=medication_id,
+        requested_dosage=dosage,
+    )
+
+    # Get all stock for this medication
+    all_stock = get_by_medication_id(medication_id)
+
+    if not all_stock:
+        return result
+
     if dosage:
-        row = query_one(
-            "SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE medication_id = ? AND dosage = ?",
-            (medication_id, dosage),
-        )
+        # Look for exact match
+        for stock_item in all_stock:
+            if stock_item.dosage == dosage:
+                result.exact_match = stock_item
+                result.available_quantity = stock_item.quantity
+            else:
+                result.alternatives.append(stock_item)
     else:
-        row = query_one(
-            "SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE medication_id = ?",
-            (medication_id,),
-        )
-    return row["total"] if row else 0
+        # No dosage specified - return all as alternatives
+        result.alternatives = all_stock
+        result.available_quantity = sum(s.quantity for s in all_stock)
+
+    return result
 
 
 def update_quantity(stock_id: int, quantity: int) -> bool:
