@@ -9,32 +9,46 @@ async def on_chat_start() -> None:
     cl.user_session.set("messages", [])
 
 
-@cl.step(name="Thinking...", type="llm", show_input=False)
-async def thinking_step(messages: list[dict[str, str]]) -> list[StreamEvent]:
-    """Process reasoning events and return text events for later streaming."""
-    current_step = cl.context.current_step
-    text_events: list[StreamEvent] = []
-
-    async for event in chat(messages):
-        if event.type == "reasoning":
-            await current_step.stream_token(event.content)
-        elif event.type == "text":
-            text_events.append(event)
-
-    return text_events
-
-
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
     """Handle incoming user messages."""
-    messages: list[dict[str, str]] = cl.user_session.get("messages", [])
+    messages: list[dict[str, str]] = cl.user_session.get("messages") or []
 
     messages.append({"role": "user", "content": message.content})
 
-    # First: run thinking step (streams reasoning, collects text events)
-    text_events = await thinking_step(messages)
+    text_events: list[StreamEvent] = []
+    thinking_step: cl.Step | None = None
 
-    # Second: stream the text response
+    async for event in chat(messages):
+        if event.type == "reasoning":
+            # Start thinking step if not already started
+            if thinking_step is None:
+                thinking_step = cl.Step(
+                    name="Thinking...", type="llm", show_input=False
+                )
+                await thinking_step.__aenter__()
+            await thinking_step.stream_token(event.content)
+
+        elif event.type == "reasoning_end":
+            # Close thinking step when reasoning ends
+            if thinking_step is not None:
+                await thinking_step.__aexit__(None, None, None)
+                thinking_step = None
+
+        elif event.type == "tool_call":
+            # Tool calls appear at the same level as thinking
+            async with cl.Step(name=event.tool_name, type="tool") as tool_step:
+                tool_step.input = event.content
+                tool_step.output = event.tool_result or ""
+
+        elif event.type == "text":
+            text_events.append(event)
+
+    # Ensure thinking step is closed if it was still open
+    if thinking_step is not None:
+        await thinking_step.__aexit__(None, None, None)
+
+    # Stream the text response
     msg = cl.Message(content="")
     await msg.send()
 
