@@ -18,12 +18,6 @@ uv sync
 # Run dev server (with hot reload)
 uv run chainlit run main.py -w
 
-# Run tests
-uv run pytest                                      # all tests
-uv run pytest tests/test_tools.py                  # single file
-uv run pytest tests/test_tools.py::test_get_medication_info  # single test
-uv run pytest -v                                   # verbose
-
 # Lint & format
 uv run ruff format .      # format
 uv run ruff check .       # lint
