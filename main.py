@@ -24,7 +24,7 @@ async def on_message(message: cl.Message) -> None:
             # Start thinking step if not already started
             if thinking_step is None:
                 thinking_step = cl.Step(
-                    name="Thinking...", type="llm", show_input=False
+                    name="💭 Thinking...", type="llm", show_input=False
                 )
                 await thinking_step.__aenter__()
             await thinking_step.stream_token(event.content)

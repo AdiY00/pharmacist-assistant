@@ -49,14 +49,10 @@ class BaseTool(BaseModel):
         return json.dumps(result)
 
 
-class CheckStock(BaseTool):
-    """Check if a medication is in stock."""
+class GetMedicationStock(BaseTool):
+    """Get stock info for a medication by name. Returns all available dosages and quantities."""
 
     medication_name: str = Field(description="The name of the medication to check")
-    dosage: str | None = Field(
-        default=None,
-        description="Optional dosage to check if provided by user (e.g., '10mg', '500mg')",
-    )
 
     def execute(self) -> dict[str, Any]:
         # Look up medication by name (with ingredients for alternative suggestions)
@@ -69,49 +65,35 @@ class CheckStock(BaseTool):
             }
 
         # Check stock availability
-        availability = stock.check_availability(med.id, self.dosage)
+        availability = stock.check_availability(med.id)
 
-        result: dict[str, Any] = {
+        # Get in-stock items
+        in_stock_items = [s for s in availability.alternatives if s.quantity > 0]
+
+        return {
             "medication_name": med.name_en,
-            "medication_name_he": med.name_he,
             "found": True,
-            "in_stock": availability.available_quantity > 0,
-            "total_quantity": availability.available_quantity,
-            "active_ingredients": [
-                {"name_en": ing.name_en, "name_he": ing.name_he}
-                for ing in med.ingredients
+            "description": med.description_en,
+            "requires_prescription": med.requires_prescription,
+            "in_stock": len(in_stock_items) > 0,
+            "active_ingredients": [ing.name_en for ing in med.ingredients],
+            "available_stock": [
+                {"dosage": s.dosage, "quantity": s.quantity} for s in in_stock_items
             ],
         }
 
-        if self.dosage:
-            result["requested_dosage"] = self.dosage
-            result["exact_match"] = availability.has_exact_match
 
-        # Include available dosages/quantities
-        if availability.exact_match:
-            result["stock"] = {
-                "dosage": availability.exact_match.dosage,
-                "quantity": availability.exact_match.quantity,
-            }
-
-        if availability.alternatives:
-            result["alternatives"] = [
-                {"dosage": s.dosage, "quantity": s.quantity}
-                for s in availability.alternatives
-            ]
-
-        return result
-
-
-class SearchByIngredient(BaseTool):
-    """Search for medications by their active ingredient."""
+class GetMedicationsByIngredient(BaseTool):
+    """Get medications containing an ingredient. Returns stock availability for each."""
 
     ingredient_name: str = Field(
         description="The name of the active ingredient to search for"
     )
 
     def execute(self) -> dict[str, Any]:
-        results = medications.get_by_ingredient(self.ingredient_name)
+        results = medications.get_by_ingredient(
+            self.ingredient_name, include_ingredients=True
+        )
 
         if not results:
             return {
@@ -121,18 +103,37 @@ class SearchByIngredient(BaseTool):
                 "medications": [],
             }
 
+        medication_list = []
+        for med in results:
+            # Get stock availability
+            availability = stock.check_availability(med.id)
+            in_stock_items = [s for s in availability.alternatives if s.quantity > 0]
+
+            # Find extra ingredients (besides the searched one)
+            extra_ingredients = [
+                ing.name_en
+                for ing in med.ingredients
+                if ing.name_en.lower() != self.ingredient_name.lower()
+            ]
+
+            med_info: dict[str, Any] = {
+                "name": med.name_en,
+                "description": med.description_en,
+                "requires_prescription": med.requires_prescription,
+                "in_stock": len(in_stock_items) > 0,
+                "available_stock": [
+                    {"dosage": s.dosage, "quantity": s.quantity} for s in in_stock_items
+                ],
+            }
+
+            if extra_ingredients:
+                med_info["extra_ingredients"] = extra_ingredients
+
+            medication_list.append(med_info)
+
         return {
             "ingredient_name": self.ingredient_name,
             "found": True,
             "count": len(results),
-            "medications": [
-                {
-                    "name_en": med.name_en,
-                    "name_he": med.name_he,
-                    "description_en": med.description_en,
-                    "description_he": med.description_he,
-                    "requires_prescription": med.requires_prescription,
-                }
-                for med in results
-            ],
+            "medications": medication_list,
         }
