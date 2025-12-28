@@ -21,11 +21,11 @@ PharmaBot is an AI-powered chatbot designed to assist users with information reg
 ``` txt
 pharmacist-assistant/
 ├── .chainlit/           # Chainlit config
-├── agent/               # AI agent module
-│   ├── agent.py         # OpenAI agent logic & conversation handling
-│   ├── tools.py         # Tool definitions for the AI agent
-│   └── system_prompt.md # Agent system prompt
-├── db/                  # Database layer
+├── agent/
+│   ├── agent.py         # Agent logic & conversation handling
+│   ├── tools.py         # Tool definitions
+│   └── system_prompt.md
+├── db/
 │   ├── sql/             # Schema & seed data
 │   ├── models/          # Pydantic models & dosage utilities
 │   ├── repositories/    # Data access
@@ -67,8 +67,10 @@ Environment variables:
 ```dotenv
 # OpenAI API key (required)
 OPENAI_API_KEY=sk-***
+
 # Model to use (optional, defaults to gpt-5)
 # OPENAI_MODEL=gpt-5.2
+
 # Reasoning effort for the model (optional, defaults to low)
 # REASONING_EFFORT=medium
 ```
@@ -84,7 +86,7 @@ OPENAI_API_KEY=sk-***
 ### UV
 
 1. Install dependencies: `uv sync`
-2. Seed DB: `uv uv run python -c "from db.connection import init_db; init_db(seed=True)"`
+2. Seed DB: `uv run python -c "from db.connection import init_db; init_db(seed=True)"`
 3. Run app: `uv run chainlit run main.py`
 
 ## Examples (Screenshots)
