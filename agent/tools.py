@@ -251,13 +251,16 @@ class ReserveMedications(BaseTool):
     """Reserve medications for a user. Requires 4-digit PIN for identification.
 
     Validates prescriptions (when required), checks stock, and updates inventory.
-    Stock units are monthly packs. Each reservation decrements stock and increments
-    the prescription's months_fulfilled by the quantity reserved.
+    Stock units are monthly packs (1 pack = 1 month supply at the labeled dosage).
+
+    Dosage flexibility: Different dosages can fulfill a prescription based on total mg.
+    Example: To fulfill 1 month of a 20mg prescription using 10mg packs, you need 2 packs
+    (because 2x10mg = 20mg = 1 month of 20mg). The response will show:
+    - quantity: actual packs reserved from stock (e.g., 2 packs of 10mg)
+    - months_consumed_from_prescription: prescription months used (e.g., 1 month)
 
     Prescription medications must have valid active prescriptions. Non-prescription (OTC)
-    medications can be reserved with just the PIN. Dosage flexibility is allowed -
-    e.g., 5x100mg packs can fulfill a 10x50mg prescription (equivalent total milligrams,
-    with up to 25% tolerance for rounding).
+    medications can be reserved with just the PIN.
 
     This is an all-or-nothing operation: if any medication fails validation,
     no reservations are made.
@@ -428,9 +431,20 @@ class ReserveMedications(BaseTool):
                 # Include prescription info only if applicable
                 if rx:
                     reserved_item["prescription_id"] = rx.id
-                    reserved_item["months_remaining"] = (
+                    reserved_item["prescribed_dosage"] = rx.dosage
+                    reserved_item["months_consumed_from_prescription"] = item[
+                        "effective_months"
+                    ]
+                    reserved_item["months_remaining_on_prescription"] = (
                         rx.months_remaining - item["effective_months"]
                     )
+                    # Add note if dosage differs from prescription
+                    if item["dosage"] != rx.dosage:
+                        reserved_item["dosage_note"] = (
+                            f"Reserved {item['quantity']} pack(s) of {item['dosage']} "
+                            f"to fulfill {item['effective_months']} month(s) of "
+                            f"{rx.dosage} prescription"
+                        )
 
                 if dosage_instructions:
                     reserved_item["usage"] = dosage_instructions[0]
