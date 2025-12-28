@@ -29,21 +29,21 @@ RUN uv run python -c "from db import init_db; init_db(seed=True)"
 FROM python:3.13-alpine
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
 # Copy only the virtual environment and necessary runtime files from the builder stage
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/agent.py /app/main.py /app/system_prompt.md /app/tools.py /app/chainlit.md ./
+COPY --from=builder /app/main.py /app/tools.py /app/chainlit.md ./
+COPY --from=builder /app/agent ./agent
 COPY --from=builder /app/db ./db
 COPY --from=builder /app/data ./data
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.chainlit ./.chainlit
 
 # Expose the default Chainlit port
-EXPOSE 8000
+EXPOSE 8080
 
 # Command to run the application
-CMD ["chainlit", "run", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD [".venv/bin/chainlit", "run", "main.py", "--host", "0.0.0.0", "--port", "8080"]
