@@ -191,7 +191,12 @@ INSERT INTO users (pin, name) VALUES
     ('5678', 'Sarah Levy'),
     ('9012', 'Michael Ben-Ari'),
     ('3456', 'Rachel Green'),
-    ('7890', 'Yossi Mizrachi');
+    ('7890', 'Yossi Mizrachi'),
+    ('2468', 'Maya Levi'),
+    ('1357', 'Noam Weiss'),
+    ('4321', 'Liat Shalev'),
+    ('6789', 'Omer Katz'),
+    ('1122', 'Rina Azulai');
 
 -- Prescriptions (various interesting scenarios)
 INSERT INTO prescriptions (user_id, medication_id, dosage, months_supply, months_fulfilled, expires_at) VALUES
@@ -216,7 +221,32 @@ INSERT INTO prescriptions (user_id, medication_id, dosage, months_supply, months
     -- Yossi: Lipitor - FULLY FULFILLED (no refills remaining)
     (5, 15, '10mg', 3, 3, '2026-06-01'),
     -- Yossi: Claritine (OUT OF STOCK, NO ALTERNATIVES) - double problem
-    (5, 21, '10mg', 2, 0, '2026-04-15');
+    (5, 21, '10mg', 2, 0, '2026-04-15'),
+
+    -- Maya: Zyrtec (very low stock) - active
+    (6, 19, '10mg', 1, 0, '2026-05-20'),
+    -- Maya: Losec (OUT OF STOCK) - needs alternative
+    (6, 9, '20mg', 2, 0, '2026-02-10'),
+
+    -- Noam: Moxypen (low stock) - active
+    (7, 7, '500mg', 1, 0, '2026-01-15'),
+    -- Noam: Sudafed (low stock, OTC) - active
+    (7, 18, '60mg', 1, 0, '2026-03-01'),
+
+    -- Liat: Glucophage (in stock) - active, partially fulfilled
+    (8, 12, '500mg', 6, 3, '2026-07-01'),
+    -- Liat: Norvasc (OUT OF STOCK, NO ALTERNATIVES) - problematic
+    (8, 22, '5mg', 3, 1, '2026-09-01'),
+
+    -- Omer: Atorvastatin Teva (in stock) - active
+    (9, 16, '20mg', 6, 1, '2026-10-01'),
+    -- Omer: Lipitor - FULLY FULFILLED (no refills remaining)
+    (9, 15, '10mg', 3, 3, '2026-06-15'),
+
+    -- Rina: Glucophage - EXPIRED prescription
+    (10, 12, '850mg', 6, 2, '2024-11-15'),
+    -- Rina: Benadryl (in stock) - active
+    (10, 17, '25mg', 2, 0, '2026-04-01');
 
 -- Dosage instructions
 INSERT INTO dosage_instructions (medication_id, dosage, adult_dose, child_dose, frequency, max_daily, instructions, warnings) VALUES
