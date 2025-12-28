@@ -248,12 +248,14 @@ class MedicationToReserve(BaseModel):
 
 
 class ReserveMedications(BaseTool):
-    """Reserve medications for a user. Validates prescriptions, checks stock, and updates inventory.
+    """Reserve medications for a user. Requires 4-digit PIN for identification.
 
+    Validates prescriptions (when required), checks stock, and updates inventory.
     Stock units are monthly packs. Each reservation decrements stock and increments
     the prescription's months_fulfilled by the quantity reserved.
 
-    All medications must have valid active prescriptions. Dosage flexibility is allowed -
+    Prescription medications must have valid active prescriptions. Non-prescription (OTC)
+    medications can be reserved with just the PIN. Dosage flexibility is allowed -
     e.g., 5x100mg packs can fulfill a 10x50mg prescription (equivalent total milligrams,
     with up to 25% tolerance for rounding).
 
@@ -261,7 +263,7 @@ class ReserveMedications(BaseTool):
     no reservations are made.
     """
 
-    user_pin: str = Field(description="The user's 4-digit PIN")
+    user_pin: str = Field(description="The user's 4-digit PIN (required)")
     medications: list[MedicationToReserve] = Field(
         description="List of medications to reserve with dosage and quantity"
     )
