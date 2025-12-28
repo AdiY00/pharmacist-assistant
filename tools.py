@@ -74,6 +74,7 @@ class GetMedicationStock(BaseTool):
 
         return {
             "medication_name": med.name_en,
+            "medication_name_he": med.name_he,
             "found": True,
             "description": med.description_en,
             "requires_prescription": med.requires_prescription,
@@ -124,6 +125,7 @@ class GetDosageInstructions(BaseTool):
 
         return {
             "medication_name": med.name_en,
+            "medication_name_he": med.name_he,
             "found": True,
             "instructions_found": True,
             "dosage_instructions": instructions,
@@ -165,6 +167,7 @@ class GetMedicationsByIngredient(BaseTool):
 
             med_info: dict[str, Any] = {
                 "name": med.name_en,
+                "name_he": med.name_he,
                 "description": med.description_en,
                 "requires_prescription": med.requires_prescription,
                 "price": med.price,
@@ -223,6 +226,7 @@ class LoadPrescriptions(BaseTool):
 
             if rx.medication:
                 rx_info["medication_name"] = rx.medication.name_en
+                rx_info["medication_name_he"] = rx.medication.name_he
                 rx_info["price"] = rx.medication.price
 
             prescription_list.append(rx_info)
@@ -412,6 +416,7 @@ class ReserveMedications(BaseTool):
 
                 reserved_item: dict[str, Any] = {
                     "medication_name": med.name_en,
+                    "medication_name_he": med.name_he,
                     "dosage": item["dosage"],
                     "quantity": item["quantity"],
                     "unit_price": med.price,
