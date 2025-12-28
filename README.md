@@ -43,6 +43,21 @@ pharmacist-assistant/
 - **ingredients** - Active ingredients (many-to-many with medications)
 - **dosage_instructions** - Dosing info, frequency, and warnings
 
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_dosage_instructions` | Get usage instructions (doses, frequency, warnings) |
+| `get_medication_stock` | Get stock info for a medication (dosages, quantities) |
+| `get_medications_by_ingredient` | Find medications containing an active ingredient |
+| `load_prescriptions` | Load active prescriptions for a user by PIN |
+| `reserve_medications` | Reserve medications (validates prescriptions, updates stock) |
+
+### General Guidelines
+
+- Verbose tool definitions and outputs - help dictate the flow without relying on the system prompt as much
+- All validation happens in the backend - helps prevent prompt injection and jailbreak attacks
+
 ## Installation
 
 > Clone the repo and navigate to the project directory.
@@ -71,3 +86,25 @@ OPENAI_API_KEY=sk-***
 1. Install dependencies: `uv sync`
 2. Seed DB: `uv uv run python -c "from db.connection import init_db; init_db(seed=True)"`
 3. Run app: `uv run chainlit run main.py`
+
+## Examples (Screenshots)
+
+- [Dosage information](examples/dosage_info.png) - OTC dosage instructions for Advil
+- [Alternative dosage](examples/alternative_dosage.png) - Prescription refill with alternative dosage reservation
+- [OTC out of stock](examples/otc_out_of_stock.png) - Finding alternatives and reserving when medication is out of stock
+
+## General Evaluation Guidelines
+
+> Was used manually to test the chatbot during development
+
+- [Plan](docs/evaluation.md) - Evaluation plan for testing policy compliance, tool accuracy, and bilingual behavior
+- [Flows](docs/flows.md) - Multi-step conversation flows (stock check, prescription reservation, dosage info)
+- [Scenarios](docs/scenarios.md) - Test scenarios for out-of-stock medications and prescription edge cases
+
+## Future Plans
+
+> (Some things I wanted to do if I had more time)
+
+- Automated tests for functions and tools
+- Automated LLM as a judge evaluation
+- Latency optimizations - smaller models / reasoning effort `none` with gpt-5.2 etc...

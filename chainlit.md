@@ -1,6 +1,6 @@
-# Pharmacist Assistant
+# PharmaBot
 
-Welcome to the Pharmacist Assistant. I can help you with:
+Hey, I'm PharmaBot. I can help you with:
 
 - Checking medication availability and stock
 - Looking up prescription information
