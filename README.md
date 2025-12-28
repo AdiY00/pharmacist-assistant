@@ -1,4 +1,4 @@
-# <img src="public/icon.png" height="41" align="absmiddle"> PharmaBot
+# <img src="public/icon.png" height="41" align="center"> PharmaBot
 
 PharmaBot is an AI-powered chatbot designed to assist users with information regarding medications, prescription management and stock management for a digital pharmacy.
 
@@ -21,6 +21,7 @@ pharmacist-assistant/
 ├── .chainlit/           # Chainlit config
 ├── agent/               # AI agent module
 │   ├── agent.py         # OpenAI agent logic & conversation handling
+│   ├── tools.py         # Tool definitions for the AI agent
 │   └── system_prompt.md # Agent system prompt
 ├── db/                  # Database layer
 │   ├── sql/             # Schema & seed data
@@ -28,6 +29,5 @@ pharmacist-assistant/
 │   ├── repositories/    # Data access
 │   └── connection.py    # SQLite connection management
 ├── public/              # Static assets
-├── main.py              # Chainlit app entry point
-└── tools.py             # Tool definitions for the AI agent
+└── main.py              # Chainlit app entry point
 ```

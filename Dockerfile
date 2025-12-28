@@ -35,7 +35,7 @@ WORKDIR /app
 
 # Copy only the virtual environment and necessary runtime files from the builder stage
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/main.py /app/tools.py /app/chainlit.md ./
+COPY --from=builder /app/main.py /app/chainlit.md ./
 COPY --from=builder /app/agent ./agent
 COPY --from=builder /app/db ./db
 COPY --from=builder /app/data ./data
