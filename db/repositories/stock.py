@@ -1,8 +1,8 @@
 """Stock/inventory repository."""
 
-from db import medications
 from db.connection import execute, query_all, query_one
 from db.models import Stock, StockAvailability
+from db.repositories import medications
 
 
 def _row_to_stock(row: dict, include_medication: bool = False) -> Stock:

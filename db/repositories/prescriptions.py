@@ -1,8 +1,8 @@
 """Prescriptions repository."""
 
-from db import medications, users
 from db.connection import execute, query_all, query_one
 from db.models import Prescription
+from db.repositories import medications, users
 
 
 def _row_to_prescription(

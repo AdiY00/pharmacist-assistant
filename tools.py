@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from db import medications, prescriptions, stock, users
 from db.connection import get_connection
-from db.dosage import calculate_equivalent_months
+from db.models.dosage import calculate_equivalent_months
 
 
 class BaseTool(BaseModel):

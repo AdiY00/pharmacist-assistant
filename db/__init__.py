@@ -1,6 +1,5 @@
 """Database module for the Pharmacist Assistant."""
 
-from db import medications, prescriptions, stock, users
 from db.connection import get_connection, get_db, init_db
 from db.models import (
     Ingredient,
@@ -10,6 +9,7 @@ from db.models import (
     StockAvailability,
     User,
 )
+from db.repositories import medications, prescriptions, stock, users
 
 __all__ = [
     # Connection utilities
