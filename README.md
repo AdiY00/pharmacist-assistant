@@ -1,4 +1,4 @@
-# PharmaBot
+# <img src="public/icon.png" height="41" align="absmiddle"> PharmaBot
 
 PharmaBot is an AI-powered chatbot designed to assist users with information regarding medications, prescription management and stock management for a digital pharmacy.
 
